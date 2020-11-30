@@ -1,6 +1,6 @@
 const puppeteer = require('puppeteer');
 
-(async () => {
+async function scrapeKijiji() {
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
   let links = [];
@@ -16,6 +16,9 @@ const puppeteer = require('puppeteer');
   });
 
   const numberOfPages = Math.ceil(numberOfResults/40);
+
+
+  console.log("counted number of pages");
 
   for(; currentPage <= numberOfPages; currentPage++){
 
@@ -36,6 +39,36 @@ const puppeteer = require('puppeteer');
     links = links.concat(newLinks);
   }
 
+  console.log("got " + String(links.length) + " links");
+
+  let addresses = [];
+
+  const delay = time => new Promise(res=>setTimeout(res,time));
+
+  for (let link of links){
+      console.log("doing link " + link);
+      await page.goto("https://www.kijiji.ca" + link);
+      console.log("got to page, waiting...");
+      await delay(5000);
+      let address = await page.evaluate(() => {
+        if(document.querySelectorAll(".address-3617944557")[0] != undefined){
+            console.log("worked");
+            return document.querySelectorAll(".address-3617944557")[0].innerHTML;
+        }else{
+            console.log("didnt work");
+        }
+      });
+      addresses.push(address);
+      console.log("done and pushed");
+  }
+
+  console.log("got " + Number(addresses.length) + " addresses");
+
   await browser.close();
-})();
+}
+
+scrapeKijiji();
+
+
+
 
